@@ -75,15 +75,17 @@ def registrar():
     con.close()
 
     # Activar el evento Pusher para notificar del nuevo contacto
-    pusher_client = pusher.Pusher(
-        app_id="1872732",
-        key="f02935829e1f1f02e7a1",
-        secret="34625fc852703cc297ae",
-        cluster="us2",
-        ssl=True
-    )
+    import pusher
 
-    pusher_client.trigger("canalRegistrosContacto", "registroContacto", args)
+pusher_client = pusher.Pusher(
+  app_id='1872732',
+  key='f02935829e1f1f02e7a1',
+  secret='34625fc852703cc297ae',
+  cluster='us2',
+  ssl=True
+)
+
+pusher_client.trigger('my-channel', 'my-event', {'message': 'hello world'})
 
     return f"Nuevo contacto registrado: {args.get('nombre')} - {args.get('correo')}"
 
