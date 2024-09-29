@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, jsonify
 import pusher
 import mysql.connector
 
@@ -26,9 +26,8 @@ def contactos():
     cursor = con.cursor()
     cursor.execute("SELECT * FROM tst0_contacto ORDER BY id_Contacto DESC")
     registros = cursor.fetchall()
-    con.close()
-
-    # Regresamos los registros de contactos para mostrarlos en la plantilla app.html
+    
+    # No cierres la conexión aquí si la usas después en otra parte
     return render_template("app.html", registros=registros)
 
 # Ruta para guardar un nuevo contacto en la base de datos
@@ -69,12 +68,13 @@ def contactosGuardar():
 def buscar():
     if not con.is_connected():
         con.reconnect()
+        
     cursor = con.cursor()
     cursor.execute("SELECT * FROM tst0_contacto ORDER BY id_Contacto DESC")
     registros = cursor.fetchall()
     con.close()
 
-    return registros
+    return jsonify(registros)  # Devolver registros en formato JSON
 
 # Ruta para registrar un nuevo contacto usando parámetros GET
 @app.route("/contactos/registrar", methods=["GET"])
