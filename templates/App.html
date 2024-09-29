@@ -1,1 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contactos Registrados</title>
+</head>
+<body>
+    <h1>Lista de Contactos</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Correo Electrónico</th>
+                <th>Nombre</th>
+                <th>Asunto</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for contacto in registros %}
+            <tr>
+                <td>{{ contacto[0] }}</td>
+                <td>{{ contacto[1] }}</td>
+                <td>{{ contacto[2] }}</td>
+                <td>{{ contacto[3] }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>
 
