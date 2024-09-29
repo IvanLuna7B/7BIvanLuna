@@ -1,14 +1,10 @@
-from flask import Flask
-
-from flask import render_template
-from flask import request
-
+from flask import Flask, render_template, request
 import pusher
-
 import mysql.connector
 import datetime
 import pytz
 
+# Configuración de la conexión a la base de datos
 con = mysql.connector.connect(
     host="185.232.14.52",
     database="u760464709_tst_sep",
@@ -21,40 +17,47 @@ app = Flask(__name__)
 @app.route("/")
 def index():
     con.close()
-
     return render_template("app.html")
 
-# Ejemplo de ruta GET usando templates para mostrar una vista
-@app.route("/alumnos")
-def alumnos():
-    con.close()
-
-    return render_template("alumnos.html")
-
-# Ejemplo de ruta POST para ver cómo se envia la informacion
-@app.route("/alumnos/guardar", methods=["POST"])
-def alumnosGuardar():
-    con.close()
-    matricula      = request.form["txtMatriculaFA"]
-    nombreapellido = request.form["txtNombreApellidoFA"]
-
-    return f"Matrícula {matricula} Nombre y Apellido {nombreapellido}"
-
-# Código usado en las prácticas
-@app.route("/buscar")
-def buscar():
+# Ruta para ver la lista de contactos registrados
+@app.route("/contactos")
+def contactos():
     if not con.is_connected():
         con.reconnect()
 
     cursor = con.cursor()
-    cursor.execute("SELECT * FROM sensor_log ORDER BY Id_Log DESC")
+    cursor.execute("SELECT * FROM tst0_contacto ORDER BY id_Contacto DESC")
     registros = cursor.fetchall()
-
     con.close()
 
-    return registros
+    # Regresamos los registros de contactos para mostrarlos en la plantilla
+    return render_template("contactos.html", registros=registros)
 
-@app.route("/registrar", methods=["GET"])
+# Ruta para guardar un nuevo contacto en la base de datos
+@app.route("/contactos/guardar", methods=["POST"])
+def contactosGuardar():
+    if not con.is_connected():
+        con.reconnect()
+
+    # Se extraen los datos del formulario enviado por POST
+    correo = request.form["txtCorreoElectronico"]
+    nombre = request.form["txtNombre"]
+    asunto = request.form["txtAsunto"]
+
+    cursor = con.cursor()
+
+    # Sentencia SQL para insertar un nuevo contacto
+    sql = "INSERT INTO tst0_contacto (Correo_Electronico, Nombre, Asunto) VALUES (%s, %s, %s)"
+    val = (correo, nombre, asunto)
+    cursor.execute(sql, val)
+
+    con.commit()
+    con.close()
+
+    return f"Contacto guardado: {nombre}, Correo: {correo}, Asunto: {asunto}"
+
+# Ruta para registrar un nuevo contacto usando parámetros GET (por ejemplo, para pruebas con la URL)
+@app.route("/contactos/registrar", methods=["GET"])
 def registrar():
     args = request.args
 
@@ -63,21 +66,26 @@ def registrar():
 
     cursor = con.cursor()
 
-    sql = "INSERT INTO sensor_log (Temperatura, Humedad, Fecha_Hora) VALUES (%s, %s, %s)"
-    val = (args["temperatura"], args["humedad"], datetime.datetime.now(pytz.timezone("America/Matamoros")))
+    # Inserción del contacto usando los argumentos de la URL
+    sql = "INSERT INTO tst0_contacto (Correo_Electronico, Nombre, Asunto) VALUES (%s, %s, %s)"
+    val = (args.get("correo"), args.get("nombre"), args.get("asunto"))
     cursor.execute(sql, val)
-    
+
     con.commit()
     con.close()
 
+    # Activar el evento Pusher para notificar del nuevo contacto
     pusher_client = pusher.Pusher(
-        app_id="1714541",
-        key="2df86616075904231311",
-        secret="2f91d936fd43d8e85a1a",
+        app_id="1872732",
+        key="f02935829e1f1f02e7a1",
+        secret="34625fc852703cc297ae",
         cluster="us2",
         ssl=True
     )
 
-    pusher_client.trigger("canalRegistrosTemperaturaHumedad", "registroTemperaturaHumedad", args)
+    pusher_client.trigger("canalRegistrosContacto", "registroContacto", args)
 
-    return args
+    return f"Nuevo contacto registrado: {args.get('nombre')} - {args.get('correo')}"
+
+if __name__ == "__main__":
+    app.run(debug=True)
