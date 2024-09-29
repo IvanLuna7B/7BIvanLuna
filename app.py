@@ -14,10 +14,10 @@ con = mysql.connector.connect(
 
 app = Flask(__name__)
 
+# Página principal
 @app.route("/")
 def index():
-    con.close()
-    return render_template("app.html")
+    return render_template("app.html")  # No cerramos la conexión aquí
 
 # Ruta para ver la lista de contactos registrados
 @app.route("/contactos")
@@ -30,8 +30,8 @@ def contactos():
     registros = cursor.fetchall()
     con.close()
 
-    # Regresamos los registros de contactos para mostrarlos en la plantilla
-    return render_template("contactos.html", registros=registros)
+    # Regresamos los registros de contactos para mostrarlos en la plantilla contactos.html
+    return render_template("app.html", registros=registros)  # Asegúrate de tener app.html
 
 # Ruta para guardar un nuevo contacto en la base de datos
 @app.route("/contactos/guardar", methods=["POST"])
@@ -75,17 +75,15 @@ def registrar():
     con.close()
 
     # Activar el evento Pusher para notificar del nuevo contacto
-    import pusher
+    pusher_client = pusher.Pusher(
+        app_id='1872732',
+        key='f02935829e1f1f02e7a1',
+        secret='34625fc852703cc297ae',
+        cluster='us2',
+        ssl=True
+    )
 
-pusher_client = pusher.Pusher(
-  app_id='1872732',
-  key='f02935829e1f1f02e7a1',
-  secret='34625fc852703cc297ae',
-  cluster='us2',
-  ssl=True
-)
-
-pusher_client.trigger('my-channel', 'my-event', {'message': 'hello world'})
+    pusher_client.trigger('my-channel', 'my-event', {'message': 'hello world'})
 
     return f"Nuevo contacto registrado: {args.get('nombre')} - {args.get('correo')}"
 
