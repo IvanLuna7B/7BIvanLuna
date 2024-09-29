@@ -11,8 +11,6 @@ con = mysql.connector.connect(
     user="u760464709_tst_sep_usr",
     password="dJ0CIAFF="
 )
-except mysql.connector.Error as err:
-    print(f"Error al conectar a la base de datos: {err}")
 
 app = Flask(__name__)
 
@@ -91,4 +89,3 @@ def registrar():
 
 if __name__ == "__main__":
     app.run(debug=True)
-
