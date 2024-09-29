@@ -60,7 +60,8 @@
 
     <script>
         function buscar() {
-            $.get("/contactos", function(respuesta) {
+            $.get("/buscar", function(respuesta) {
+                console.log(respuesta); // Para verificar qué datos se reciben
                 $("#tbodyContactos").html(""); // Limpiamos el contenido de la tabla
 
                 // Recorremos la respuesta y llenamos el cuerpo de la tabla
