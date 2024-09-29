@@ -1,8 +1,6 @@
 from flask import Flask, render_template, request
 import pusher
 import mysql.connector
-import datetime
-import pytz
 
 # Configuración de la conexión a la base de datos
 con = mysql.connector.connect(
@@ -17,7 +15,7 @@ app = Flask(__name__)
 # Página principal
 @app.route("/")
 def index():
-    return render_template("App.html")  # No cerramos la conexión aquí
+    return render_template("App.html")  # Asegúrate de que sea el nombre correcto
 
 # Ruta para ver la lista de contactos registrados
 @app.route("/contactos")
@@ -30,8 +28,8 @@ def contactos():
     registros = cursor.fetchall()
     con.close()
 
-    # Regresamos los registros de contactos para mostrarlos en la plantilla contactos.html
-    return render_template("App.html", registros=registros)  # Asegúrate de tener app.html
+    # Regresamos los registros de contactos para mostrarlos en la plantilla app.html
+    return render_template("app.html", registros=registros)
 
 # Ruta para guardar un nuevo contacto en la base de datos
 @app.route("/contactos/guardar", methods=["POST"])
@@ -54,9 +52,31 @@ def contactosGuardar():
     con.commit()
     con.close()
 
+    # Activar el evento Pusher para notificar del nuevo contacto
+    pusher_client = pusher.Pusher(
+        app_id='1872732',
+        key='f02935829e1f1f02e7a1',
+        secret='34625fc852703cc297ae',
+        cluster='us2',
+        ssl=True
+    )
+    pusher_client.trigger('my-channel', 'my-event', {'message': 'Nuevo contacto registrado'})
+
     return f"Contacto guardado: {nombre}, Correo: {correo}, Asunto: {asunto}"
 
-# Ruta para registrar un nuevo contacto usando parámetros GET (por ejemplo, para pruebas con la URL)
+# Ruta para buscar contactos en la base de datos
+@app.route("/buscar")
+def buscar():
+    if not con.is_connected():
+        con.reconnect()
+    cursor = con.cursor()
+    cursor.execute("SELECT * FROM tst0_contacto ORDER BY id_Contacto DESC")
+    registros = cursor.fetchall()
+    con.close()
+
+    return registros
+
+# Ruta para registrar un nuevo contacto usando parámetros GET
 @app.route("/contactos/registrar", methods=["GET"])
 def registrar():
     args = request.args
@@ -82,8 +102,7 @@ def registrar():
         cluster='us2',
         ssl=True
     )
-
-    pusher_client.trigger('my-channel', 'my-event', {'message': 'hello world'})
+    pusher_client.trigger('my-channel', 'my-event', {'message': 'Nuevo contacto registrado'})
 
     return f"Nuevo contacto registrado: {args.get('nombre')} - {args.get('correo')}"
 
