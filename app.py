@@ -31,7 +31,7 @@ def contactos():
     con.close()
 
     # Regresamos los registros de contactos para mostrarlos en la plantilla contactos.html
-    return render_template("app.html", registros=registros)  # Asegúrate de tener app.html
+    return render_template("App.html", registros=registros)  # Asegúrate de tener app.html
 
 # Ruta para guardar un nuevo contacto en la base de datos
 @app.route("/contactos/guardar", methods=["POST"])
