@@ -17,7 +17,7 @@ app = Flask(__name__)
 # Página principal
 @app.route("/")
 def index():
-    return render_template("app.html")  # No cerramos la conexión aquí
+    return render_template("App.html")  # No cerramos la conexión aquí
 
 # Ruta para ver la lista de contactos registrados
 @app.route("/contactos")
