@@ -44,12 +44,7 @@
                     <td>{{ contacto[2] }}</td>
                     <td>{{ contacto[3] }}</td>
                     <td>
-                        <form action="/contactos/actualizar/{{ contacto[0] }}" method="POST" class="d-inline">
-                            <input type="hidden" name="txtCorreoElectronico" value="{{ contacto[1] }}">
-                            <input type="hidden" name="txtNombre" value="{{ contacto[2] }}">
-                            <input type="hidden" name="txtAsunto" value="{{ contacto[3] }}">
-                            <button type="submit" class="btn btn-warning btn-sm">Actualizar</button>
-                        </form>
+                        <button class="btn btn-warning btn-sm" onclick="mostrarFormularioEditar({{ contacto[0] }})">Actualizar</button>
                         <form action="/contactos/eliminar/{{ contacto[0] }}" method="POST" class="d-inline">
                             <button type="submit" class="btn btn-danger btn-sm">Eliminar</button>
                         </form>
@@ -60,8 +55,65 @@
         </table>
     </div>
 
+    <!-- Modal para editar contacto -->
+    <div class="modal fade" id="editarContactoModal" tabindex="-1" aria-labelledby="editarContactoModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editarContactoModalLabel">Editar Contacto</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formEditarContacto">
+                        <div class="mb-3">
+                            <label for="editarNombre" class="form-label">Nombre</label>
+                            <input type="text" class="form-control" id="editarNombre" name="nombre" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editarAsunto" class="form-label">Asunto</label>
+                            <input type="text" class="form-control" id="editarAsunto" name="asunto" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script>
+        let contactoId; // Para almacenar el ID del contacto que estamos editando
+
+        function mostrarFormularioEditar(id) {
+            contactoId = id;
+            // Obtener los datos del contacto por ID
+            $.get(`/contactos/${id}/editar`, function(data) {
+                // Llenar el formulario del modal con los datos recibidos
+                $("#editarNombre").val(data.nombre);
+                $("#editarAsunto").val(data.asunto);
+                // Mostrar el modal
+                $("#editarContactoModal").modal("show");
+            });
+        }
+
+        // Guardar los cambios al hacer submit en el formulario
+        $("#formEditarContacto").submit(function(event) {
+            event.preventDefault(); // Evitar recargar la página
+
+            const nombre = $("#editarNombre").val();
+            const asunto = $("#editarAsunto").val();
+
+            // Enviar los datos actualizados al servidor
+            $.post(`/contactos/actualizar/${contactoId}`, {
+                nombre: nombre,
+                asunto: asunto
+            }, function(response) {
+                alert(response); // Mostrar la respuesta del servidor
+                $("#editarContactoModal").modal("hide"); // Ocultar el modal
+                buscar(); // Actualizar la lista de contactos
+            });
+        });
+
         function buscar() {
             $.get("/buscar", function(respuesta) {
                 $("#tbodyContactos").html("");
@@ -73,12 +125,7 @@
                         <td>${contacto[2]}</td>
                         <td>${contacto[3]}</td>
                         <td>
-                            <form action="/contactos/actualizar/${contacto[0]}" method="POST" class="d-inline">
-                                <input type="hidden" name="txtCorreoElectronico" value="${contacto[1]}">
-                                <input type="hidden" name="txtNombre" value="${contacto[2]}">
-                                <input type="hidden" name="txtAsunto" value="${contacto[3]}">
-                                <button type="submit" class="btn btn-warning btn-sm">Actualizar</button>
-                            </form>
+                            <button class="btn btn-warning btn-sm" onclick="mostrarFormularioEditar(${contacto[0]})">Actualizar</button>
                             <form action="/contactos/eliminar/${contacto[0]}" method="POST" class="d-inline">
                                 <button type="submit" class="btn btn-danger btn-sm">Eliminar</button>
                             </form>
@@ -89,8 +136,9 @@
         }
 
         $(document).ready(function () {
-            buscar(); // Llamada inicial para llenar la tabla
+            buscar();
         });
     </script>
+
 </body>
 </html>
