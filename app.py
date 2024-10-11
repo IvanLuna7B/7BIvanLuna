@@ -29,33 +29,22 @@ def contactos():
 
     return render_template("app.html", registros=registros)
 
-# Ruta para guardar un nuevo contacto en la base de datos
-@app.route("/contactos/guardar", methods=["POST"])
-def contactosGuardar():
+# Ruta para obtener un contacto específico para edición
+@app.route("/contactos/<int:id>/editar")
+def editarContacto(id):
     if not con.is_connected():
         con.reconnect()
 
-    correo = request.form["txtCorreoElectronico"]
-    nombre = request.form["txtNombre"]
-    asunto = request.form["txtAsunto"]
-
     cursor = con.cursor()
-    sql = "INSERT INTO tst0_contacto (Correo_Electronico, Nombre, Asunto) VALUES (%s, %s, %s)"
-    val = (correo, nombre, asunto)
-    cursor.execute(sql, val)
+    cursor.execute("SELECT * FROM tst0_contacto WHERE id_Contacto = %s", (id,))
+    contacto = cursor.fetchone()
 
-    con.commit()
-
-    pusher_client = pusher.Pusher(
-        app_id='1872732',
-        key='f02935829e1f1f02e7a1',
-        secret='34625fc852703cc297ae',
-        cluster='us2',
-        ssl=True
-    )
-    pusher_client.trigger('my-channel', 'my-event', {'message': 'Nuevo contacto registrado'})
-
-    return f"Contacto guardado: {nombre}, Correo: {correo}, Asunto: {asunto}"
+    return jsonify({
+        "id": contacto[0],
+        "correo": contacto[1],
+        "nombre": contacto[2],
+        "asunto": contacto[3]
+    })
 
 # Ruta para actualizar un contacto existente
 @app.route("/contactos/actualizar/<int:id>", methods=["POST"])
@@ -63,13 +52,12 @@ def actualizarContacto(id):
     if not con.is_connected():
         con.reconnect()
 
-    correo = request.form["txtCorreoElectronico"]
-    nombre = request.form["txtNombre"]
-    asunto = request.form["txtAsunto"]
+    nombre = request.form["nombre"]
+    asunto = request.form["asunto"]
 
     cursor = con.cursor()
-    sql = "UPDATE tst0_contacto SET Correo_Electronico = %s, Nombre = %s, Asunto = %s WHERE id_Contacto = %s"
-    val = (correo, nombre, asunto, id)
+    sql = "UPDATE tst0_contacto SET Nombre = %s, Asunto = %s WHERE id_Contacto = %s"
+    val = (nombre, asunto, id)
     cursor.execute(sql, val)
 
     con.commit()
@@ -84,29 +72,6 @@ def actualizarContacto(id):
     pusher_client.trigger('my-channel', 'my-event', {'message': 'Contacto actualizado'})
 
     return f"Contacto {id} actualizado con éxito"
-
-# Ruta para eliminar un contacto
-@app.route("/contactos/eliminar/<int:id>", methods=["POST"])
-def eliminarContacto(id):
-    if not con.is_connected():
-        con.reconnect()
-
-    cursor = con.cursor()
-    sql = "DELETE FROM tst0_contacto WHERE id_Contacto = %s"
-    cursor.execute(sql, (id,))
-
-    con.commit()
-
-    pusher_client = pusher.Pusher(
-        app_id='1872732',
-        key='f02935829e1f1f02e7a1',
-        secret='34625fc852703cc297ae',
-        cluster='us2',
-        ssl=True
-    )
-    pusher_client.trigger('my-channel', 'my-event', {'message': 'Contacto eliminado'})
-
-    return f"Contacto {id} eliminado con éxito"
 
 # Ruta para buscar contactos en la base de datos
 @app.route("/buscar")
