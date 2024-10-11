@@ -73,6 +73,19 @@ def actualizarContacto(id):
 
     return f"Contacto {id} actualizado con éxito"
 
+# Ruta para eliminar un contacto
+@app.route("/contactos/eliminar/<int:id>", methods=["POST"])
+def eliminarContacto(id):
+    if not con.is_connected():
+        con.reconnect()
+
+    cursor = con.cursor()
+    sql = "DELETE FROM tst0_contacto WHERE id_Contacto = %s"
+    cursor.execute(sql, (id,))
+
+    con.commit()
+    return jsonify({"status": "success", "id": id})
+
 # Ruta para buscar contactos en la base de datos
 @app.route("/buscar")
 def buscar():
