@@ -82,9 +82,53 @@ def eliminarContacto(id):
     cursor = con.cursor()
     sql = "DELETE FROM tst0_contacto WHERE id_Contacto = %s"
     cursor.execute(sql, (id,))
-
     con.commit()
-    return jsonify({"status": "success", "id": id})
+
+    pusher_client = pusher.Pusher(
+        app_id='1872732',
+        key='f02935829e1f1f02e7a1',
+        secret='34625fc852703cc297ae',
+        cluster='us2',
+        ssl=True
+    )
+    pusher_client.trigger('my-channel', 'my-event', {'message': 'Contacto eliminado'})
+
+    return f"Contacto {id} eliminado con éxito"
+
+# Ruta para registrar un nuevo contacto usando parámetros GET
+@app.route("/contactos/registrar", methods=["GET"])
+def registrarContacto():
+    if not con.is_connected():
+        con.reconnect()
+
+    # Obtener los parámetros de la URL
+    correo = request.args.get("correo")
+    nombre = request.args.get("nombre")
+    asunto = request.args.get("asunto")
+
+    if correo and nombre and asunto:
+        cursor = con.cursor()
+
+        # Inserción del contacto usando los argumentos de la URL
+        sql = "INSERT INTO tst0_contacto (Correo_Electronico, Nombre, Asunto) VALUES (%s, %s, %s)"
+        val = (correo, nombre, asunto)
+        cursor.execute(sql, val)
+
+        con.commit()
+
+        # Activar el evento Pusher para notificar del nuevo contacto
+        pusher_client = pusher.Pusher(
+            app_id='1872732',
+            key='f02935829e1f1f02e7a1',
+            secret='34625fc852703cc297ae',
+            cluster='us2',
+            ssl=True
+        )
+        pusher_client.trigger('my-channel', 'my-event', {'message': 'Nuevo contacto registrado'})
+
+        return f"Nuevo contacto registrado: {nombre} - {correo}"
+    else:
+        return "Faltan parámetros para registrar el contacto", 400
 
 # Ruta para buscar contactos en la base de datos
 @app.route("/buscar")
