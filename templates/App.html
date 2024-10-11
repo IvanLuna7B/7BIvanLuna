@@ -38,16 +38,14 @@
             </thead>
             <tbody id="tbodyContactos">
                 {% for contacto in registros %}
-                <tr>
+                <tr id="contacto-{{ contacto[0] }}">
                     <td>{{ contacto[0] }}</td>
                     <td>{{ contacto[1] }}</td>
                     <td>{{ contacto[2] }}</td>
                     <td>{{ contacto[3] }}</td>
                     <td>
                         <button class="btn btn-warning btn-sm" onclick="mostrarFormularioEditar({{ contacto[0] }})">Actualizar</button>
-                        <form action="/contactos/eliminar/{{ contacto[0] }}" method="POST" class="d-inline">
-                            <button type="submit" class="btn btn-danger btn-sm">Eliminar</button>
-                        </form>
+                        <button class="btn btn-danger btn-sm" onclick="eliminarContacto({{ contacto[0] }})">Eliminar</button>
                     </td>
                 </tr>
                 {% endfor %}
@@ -114,21 +112,30 @@
             });
         });
 
+        function eliminarContacto(id) {
+            if (confirm("¿Estás seguro de que quieres eliminar este contacto?")) {
+                $.post(`/contactos/eliminar/${id}`, function(response) {
+                    if (response.status === "success") {
+                        // Eliminar la fila de la tabla que corresponde al ID eliminado
+                        $(`#contacto-${response.id}`).remove();
+                    }
+                });
+            }
+        }
+
         function buscar() {
             $.get("/buscar", function(respuesta) {
                 $("#tbodyContactos").html("");
                 for (var x in respuesta) {
                     var contacto = respuesta[x];
-                    $("#tbodyContactos").append(`<tr>
+                    $("#tbodyContactos").append(`<tr id="contacto-${contacto[0]}">
                         <td>${contacto[0]}</td>
                         <td>${contacto[1]}</td>
                         <td>${contacto[2]}</td>
                         <td>${contacto[3]}</td>
                         <td>
                             <button class="btn btn-warning btn-sm" onclick="mostrarFormularioEditar(${contacto[0]})">Actualizar</button>
-                            <form action="/contactos/eliminar/${contacto[0]}" method="POST" class="d-inline">
-                                <button type="submit" class="btn btn-danger btn-sm">Eliminar</button>
-                            </form>
+                            <button class="btn btn-danger btn-sm" onclick="eliminarContacto(${contacto[0]})">Eliminar</button>
                         </td>
                     </tr>`);
                 }
