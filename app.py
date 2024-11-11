@@ -1,4 +1,4 @@
-from flask_cors import CORS, cross_origin 
+from flask_cors import CORS
 from flask import Flask, render_template, request, jsonify
 import pusher
 import mysql.connector
@@ -12,7 +12,9 @@ con = mysql.connector.connect(
 )
 
 app = Flask(__name__)
-CORS(APP)
+
+# Configuración de CORS para permitir todas las solicitudes
+CORS(app, resources={r"/*": {"origins": "*"}})
 
 # Página principal
 @app.route("/")
@@ -145,5 +147,6 @@ def buscar():
 
     return jsonify(registros)
 
+# Configuración del servidor
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run()
